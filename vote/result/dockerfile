@@ -1,0 +1,10 @@
+FROM python:3.8-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y git && \
+    git clone https://github.com/dockersamples/example-voting-app.git . && \
+    pip install -r result/requirements.txt
+
+WORKDIR /app/result
+CMD ["python", "app.py"]
