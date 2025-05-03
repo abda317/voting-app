@@ -2,31 +2,24 @@ name: Deploy to Docker Swarm
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Copy files to EC2 Master Node via SCP
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        host: ${{ secrets.HOST }}
-        username: ec2-user
-        key: ${{ secrets.SSH_KEY }}
-        source: "."
-        target: "~/app"
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
 
-    - name: Deploy Stack on EC2 via SSH
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.HOST }}
-        username: ec2-user
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          cd ~/app
-          docker stack deploy -c docker-compose.yml lks
+      - name: Deploy to remote Docker Swarm
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.HOST }} << 'EOF'
+            docker stack deploy -c /home/ec2-user/voting-app/docker-compose.yml ${{ secrets.STACK_NAME }}
+          EOF
