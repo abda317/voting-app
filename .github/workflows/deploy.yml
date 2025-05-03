@@ -10,16 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Add SSH key
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.4
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Deploy to remote Docker Swarm
-        run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.HOST }} << 'EOF'
-            docker stack deploy -c /home/ec2-user/voting-app/docker-compose.yml ${{ secrets.STACK_NAME }}
-          EOF
+    - name: Copy files via SCP
+      run: |
+        scp -o StrictHostKeyChecking=no -r . ec2-user@${{ secrets.HOST }}:/home/ec2-user/app
+
+    - name: Deploy Stack
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.HOST }} << 'EOF'
+          cd /home/ec2-user/app
+          docker stack deploy -c docker-compose.yml ${{ secrets.STACK_NAME }}
+        EOF
