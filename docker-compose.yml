@@ -2,14 +2,14 @@ version: '3'
 
 services:
   vote:
-    build: ./vote
+    image: abda317/vote-app:latest
     ports:
       - "8080:80"
     depends_on:
       - redis
 
   result:
-    build: ./result
+    image: abda317/result-app:latest
     ports:
       - "5001:80"
     depends_on:
